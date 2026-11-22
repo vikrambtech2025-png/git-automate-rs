@@ -1,6 +1,27 @@
-
-use std::process::{exit, Command};
 use names::Generator;
+use std::process::{Command, exit};
+
+fn working_tree_clean() -> bool {
+    let output = Command::new("git")
+        .args(["status", "--porcelain"])
+        .output()
+        .expect("Failed to check git status");
+
+    if !output.status.success() {
+        eprintln!("ERROR: Failed to check git status");
+        exit(1);
+    }
+
+    output.stdout.is_empty()
+}
+
+fn has_origin_remote() -> bool {
+    Command::new("git")
+        .args(["remote", "get-url", "origin"])
+        .output()
+        .map(|output| output.status.success())
+        .unwrap_or(false)
+}
 
 fn update_commit_push() {
     // 1. Stage all changes
@@ -12,6 +33,12 @@ fn update_commit_push() {
     if !add_command.success() {
         eprintln!("ERROR: Failed to add files to the Git repo");
         exit(1);
+    }
+
+    // Nothing to do when there are no changes. `git commit` would fail here.
+    if working_tree_clean() {
+        println!("Nothing to commit - working tree clean.");
+        return;
     }
 
     // 2. Generate commit message
@@ -44,7 +71,13 @@ fn update_commit_push() {
         .trim()
         .to_string();
 
-    // 4. Push changes
+    // 4. Push changes, if this repo has somewhere to push to
+    if !has_origin_remote() {
+        println!("No 'origin' remote configured - skipped push.");
+        println!("Commit message: {}", commit_message);
+        return;
+    }
+
     let push_command = Command::new("git")
         .args(["push", "origin", &branch])
         .status()
