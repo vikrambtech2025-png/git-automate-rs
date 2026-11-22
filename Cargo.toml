@@ -1,7 +1,14 @@
 [package]
-name = "git-automate_yt"
+name = "git-automate-rs"
 version = "0.1.0"
 edition = "2024"
+authors = ["VIKRAM <VIKRAM@example.com>"]
+description = "A tiny Rust CLI that stages, commits with generated names, and pushes a Git repository"
+license = "MIT"
+repository = "https://github.com/vikrambtech2025-png/git-automate-rs"
+readme = "README.md"
+keywords = ["git", "cli", "automation"]
+categories = ["command-line-utilities", "development-tools"]
 
 [dependencies]
-names = "0.14"  
+names = "0.14"

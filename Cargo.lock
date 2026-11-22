@@ -82,7 +82,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "git-automate_yt"
+name = "git-automate-rs"
 version = "0.1.0"
 dependencies = [
  "names",

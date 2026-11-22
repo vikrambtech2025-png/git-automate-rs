@@ -23,7 +23,28 @@ fn has_origin_remote() -> bool {
         .unwrap_or(false)
 }
 
+fn current_branch() -> String {
+    let output = Command::new("git")
+        .args(["branch", "--show-current"])
+        .output()
+        .expect("Failed to detect Git branch");
+
+    if !output.status.success() {
+        eprintln!("ERROR: Failed to detect Git branch");
+        exit(1);
+    }
+
+    String::from_utf8_lossy(&output.stdout).trim().to_string()
+}
+
 fn update_commit_push() {
+    // Refuse detached HEAD before changing anything, so no stray commit is made.
+    let branch = current_branch();
+    if branch.is_empty() {
+        eprintln!("ERROR: Detached HEAD - check out a branch before pushing");
+        exit(1);
+    }
+
     // 1. Stage all changes
     let add_command = Command::new("git")
         .args(["add", "-A"])
@@ -56,22 +77,7 @@ fn update_commit_push() {
         exit(1);
     }
 
-    // 3. Detect current branch
-    let branch_output = Command::new("git")
-        .args(["branch", "--show-current"])
-        .output()
-        .expect("Failed to detect Git branch");
-
-    if !branch_output.status.success() {
-        eprintln!("ERROR: Failed to detect Git branch");
-        exit(1);
-    }
-
-    let branch = String::from_utf8_lossy(&branch_output.stdout)
-        .trim()
-        .to_string();
-
-    // 4. Push changes, if this repo has somewhere to push to
+    // 3. Push changes, if this repo has somewhere to push to
     if !has_origin_remote() {
         println!("No 'origin' remote configured - skipped push.");
         println!("Commit message: {}", commit_message);
@@ -79,7 +85,7 @@ fn update_commit_push() {
     }
 
     let push_command = Command::new("git")
-        .args(["push", "origin", &branch])
+        .args(["push", "-u", "origin", &branch])
         .status()
         .expect("Failed to execute git push");
 
@@ -99,4 +105,15 @@ fn name_generator() -> String {
 
 fn main() {
     update_commit_push();
+}
+
+#[cfg(test)]
+mod tests {
+    use super::name_generator;
+
+    #[test]
+    fn generated_commit_message_is_not_empty() {
+        let message = name_generator();
+        assert!(!message.trim().is_empty());
+    }
 }
