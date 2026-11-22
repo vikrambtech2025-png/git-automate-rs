@@ -28,6 +28,18 @@ cargo build --release
 
 The binary is written to `target/release/git-automate-rs.exe` on Windows.
 
+### Install as a command
+
+To run it from any repository by name (the approach shown in the video):
+
+```powershell
+cargo install --path . --force
+git-automate-rs
+```
+
+Cargo installs the binary into `%USERPROFILE%\.cargo\bin`, which is already on
+your `PATH` after a standard rustup setup.
+
 ## Usage
 
 ```powershell
@@ -50,6 +62,21 @@ Example output:
 Successfully added, committed and pushed changes!
 Commit message: decisive-dogs
 ```
+
+## What it automates
+
+The three Git commands from the video, in order:
+
+```text
+git add -A
+git commit -m "<generated-name>"
+git push -u origin <current-branch>
+```
+
+The commit message comes from `names::Generator::default()`, so it reads like
+`courageous-birthday` instead of a hardcoded string. Unlike the video's
+hardcoded `master`, the branch is detected at runtime, which also works on
+`main` and feature branches.
 
 ## Behaviour
 
